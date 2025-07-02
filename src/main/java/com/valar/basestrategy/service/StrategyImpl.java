@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static java.lang.Math.max;
+
 public class StrategyImpl {
     private int tradeId;
     private float dayMaxProfit, dayMaxProfitPercent;
@@ -28,11 +30,14 @@ public class StrategyImpl {
     private final Map<String, Double> dayAtrMap, dayAtrMapPercentage;
     private int parserAtLastTrade;
     private String lastAtrCheckeAtDate = "";
-   private int chk=0;
+    private int chk = 0;
     // Pivot tracking fields
     private String prevDate = null;
     private List<Ohlc> prevDayBars = new ArrayList<>();
-    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm");
+
+   private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm");
+    private static final DateTimeFormatter INPUT_DATE_FMT = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm");
+    private static final DateTimeFormatter OUTPUT_DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public StrategyImpl(
             boolean candlePeriodBelongsToDay,
@@ -65,7 +70,7 @@ public class StrategyImpl {
             if (!prevDayBars.isEmpty()) {
                 float hi = Float.NEGATIVE_INFINITY, lo = Float.POSITIVE_INFINITY, cls = 0;
                 for (Ohlc bar : prevDayBars) {
-                    hi = Math.max(hi, bar.high);
+                    hi = max(hi, bar.high);
                     lo = Math.min(lo, bar.low);
                     cls = bar.close;
                 }
@@ -98,27 +103,13 @@ public class StrategyImpl {
 
         if (mins >= kv.startTime || candlePeriodBelongsToDay) {
             checkForExitsInEnteredTrades();
-            /*System.out.println("mins: " + indexState.ohlc.mins +
-                    ", startTime: " + kv.startTime +
-                    ", cutOffTime: " + kv.cutOffTime +
-                    ", unSquaredTrades: " + unSquaredTrades +
-                    ", maxOverlap: " + kv.maxOverlap +
-                    ", parser: " + indexState.parser +
-                    ", parserAtLastTrade: " + parserAtLastTrade +
-                    ", tradeGap: " + kv.tradeGap);
-
-            System.out.println("mins >= startTime: " + (indexState.ohlc.mins >= kv.startTime));
-            System.out.println("mins <= cutOffTime: " + (indexState.ohlc.mins <= kv.cutOffTime));
-            System.out.println("unSquaredTrades < maxOverlap: " + (unSquaredTrades < kv.maxOverlap));
-            System.out.println("parser - parserAtLastTrade >= tradeGap: " + (indexState.parser - parserAtLastTrade >= kv.tradeGap));*/
 
             boolean entryConditionSatisfied = indexState.ohlc.mins >= kv.startTime
                     && indexState.ohlc.mins <= kv.cutOffTime
-                    && unSquaredTrades < kv.maxOverlap
+                    && (kv.maxOverlap == 0 || unSquaredTrades < kv.maxOverlap)
                     && indexState.parser - parserAtLastTrade >= kv.tradeGap;
-                   // && chk<100000;
-            //entryConditionSatisfied=chk<10000;
-            chk++;
+                    //&& chk < 10000;
+            //chk++;
             // ENTRY
             if (dayATRConditionSatisfied && entryConditionSatisfied && indexState.pivotsInitialized) {
                 if (mins >= kv.startTime && kv.rsiPeriod != 0 && kv.positional) {
@@ -130,7 +121,7 @@ public class StrategyImpl {
 
     private void runOptionalLogic(boolean entryConditionSatisfied) {
         Ohlc bar = indexState.ohlc;
-        int curIdx = indexState.series.getEndIndex();
+        int curIdx = indexState.parser;
         indexState.loadIndicators(kv.emaPeriod, kv.rsiPeriod);
 
         double emaVal = indexState.getEmaVal(kv.emaPeriod);
@@ -138,36 +129,41 @@ public class StrategyImpl {
 
         // last 10-candle high/low
         float high10 = Float.NEGATIVE_INFINITY, low10 = Float.POSITIVE_INFINITY;
-        for (int i = curIdx - 10; i < curIdx; ++i) {
-            if (i < 0) continue;
+        for (int i = max(0, curIdx - 10); i < curIdx; ++i) {
             Bar o = indexState.series.getBar(i);
-            high10 = Math.max(high10, o.getHighPrice().floatValue());
+            high10 = max(high10, o.getHighPrice().floatValue());
             low10 = Math.min(low10, o.getLowPrice().floatValue());
+            //System.out.println("chkr"+" " +o.getBeginTime()+" "+o.getEndTime()+" ");
         }
+
+
+        //String inputDateTime = indexState.ohlc.date + " " + indexState.ohlc.time;
+        //String formattedDateTime;
+        //LocalDateTime ldt = LocalDateTime.parse(inputDateTime, INPUT_DATE_FMT);
+        //formattedDateTime = ldt.format(OUTPUT_DATE_FMT);
+        //System.out.println(indexState.parser + "  " + formattedDateTime);
 
         // ENTRY: LONG
         if (kv.usePivots) {
-            if (rsiVal > 60 && bar.close > emaVal && bar.high > high10) {
-                kv.tradeType = "l";
+            if (rsiVal > 60 && bar.close > emaVal && bar.high > high10 && kv.tradeType.equals("l")) {
                 TradeEntity trade = new TradeEntity(tradeId, 0, 0, kv, (IndexState) indexState, indexStateMap);
                 trade.entryEma = emaVal;
                 trade.entryRsi = rsiVal;
-                trade.entryPivot = (indexState.pivotsInitialized ? ((float)indexState.pp) : Float.NaN);
+                trade.entryPivot = (indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN);
                 trade.setStopLoss(low10);
-                trade.setTarget(indexState.nearestAbove(bar.close));
+                trade.setTarget(indexState.nearestAbove(bar.close, 10, high10));
                 tradeEntities.add(trade);
                 tradeId++;
                 parserAtLastTrade = indexState.parser;
             }
             // ENTRY: SHORT
-            if (rsiVal < 40 && bar.close < emaVal && bar.low < low10) {
-                kv.tradeType = "s";
+            if (rsiVal < 40 && bar.close < emaVal && bar.low < low10 && kv.tradeType.equals("s")) {
                 TradeEntity trade = new TradeEntity(tradeId, 0, 0, kv, (IndexState) indexState, indexStateMap);
                 trade.entryEma = emaVal;
                 trade.entryRsi = rsiVal;
-                trade.entryPivot = (indexState.pivotsInitialized ? ((float)indexState.pp) : Float.NaN);
+                trade.entryPivot = (indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN);
                 trade.setStopLoss(high10);
-                trade.setTarget(indexState.nearestBelow(bar.close));
+                trade.setTarget(indexState.nearestBelow(bar.close, 10,low10));
                 tradeEntities.add(trade);
                 tradeId++;
                 parserAtLastTrade = indexState.parser;
@@ -175,8 +171,7 @@ public class StrategyImpl {
         }
     }
 
-
-    public void checkForExitsInEnteredTrades() {
+    /*public void checkForExitsInEnteredTrades() {
         Ohlc bar = indexState.ohlc;
         LocalDateTime barDateTime = LocalDateTime.parse(bar.date + " " + bar.time, DTF);
 
@@ -197,8 +192,49 @@ public class StrategyImpl {
                 hitTarget = (bar.low <= tradeEntity.target);
             }
 
-            if (hitSL || hitTarget || forceExit) {
+           if (hitSL || hitTarget || forceExit) {
                 tradeEntity.forceExit();
+                onTradeExit(bar.date, tradeEntity);
+            }
+
+            if (!tradeEntity.tradeSquared) unSquaredTrades++;
+            totalProfitPercent += tradeEntity.getTotalProfitPercent();
+            totalProfit += tradeEntity.getTotalProfit();
+        }
+        dayMaxProfit = Float.max(dayMaxProfit, totalProfit);
+        dayMaxProfitPercent = Float.max(dayMaxProfitPercent, totalProfitPercent);
+    }*/
+
+    public void checkForExitsInEnteredTrades() {
+        Ohlc bar = indexState.ohlc;
+        LocalDateTime barDateTime = LocalDateTime.parse(bar.date + " " + bar.time, DTF);
+
+        float totalProfitPercent = 0, totalProfit = 0;
+        unSquaredTrades = 0;
+
+        for (TradeEntity tradeEntity : tradeEntities) {
+            if (tradeEntity.tradeSquared) continue;
+
+            char lOrS = tradeEntity.tradeAttribs.get(0).lOrS;
+            boolean forceExit = (barDateTime.getDayOfWeek() == DayOfWeek.THURSDAY && bar.mins >= (15 * 60 + 15));
+            boolean hitSL = false, hitTarget = false;
+
+            if (lOrS == 'l') {
+                hitSL = (bar.low <= tradeEntity.stopLoss);
+                hitTarget = (bar.high >= tradeEntity.target);
+            } else if (lOrS == 's') {
+                hitSL = (bar.high >= tradeEntity.stopLoss);
+                hitTarget = (bar.low <= tradeEntity.target);
+            }
+
+            if (hitSL) {
+                tradeEntity.exit("StopLoss", "SL-hit");
+                onTradeExit(bar.date, tradeEntity);
+            } else if (hitTarget) {
+                tradeEntity.exit("Target", "TP-hit");
+                onTradeExit(bar.date, tradeEntity);
+            } else if (forceExit) {
+                tradeEntity.exit("ForceExit", "TimeExit");
                 onTradeExit(bar.date, tradeEntity);
             }
 

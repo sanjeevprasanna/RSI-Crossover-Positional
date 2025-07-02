@@ -39,6 +39,7 @@ public class KeyValues {
         rsiPeriod = Integer.parseInt(splits[iter++]);
         usePivots = Boolean.parseBoolean(splits[iter++]);
         maxOverlap = Integer.parseInt(splits[iter++]);
+        tradeGap = Integer.parseInt(splits[iter++]);
     }
 
     public static List<String> getTimeFrames(int timeFrame) {

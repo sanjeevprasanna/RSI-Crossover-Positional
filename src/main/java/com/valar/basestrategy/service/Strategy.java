@@ -98,7 +98,8 @@ public class Strategy {
                     Map<Integer, IndexState> indexStateMap = new HashMap<>();
 
                     if(isIndex) {
-                        String bnBaseFolderPath = properties.getProperty("indexFilePath");
+                        String bnBaseFolderPath = properties.getProperty("" +
+                                "indexFilePath");
                         List<String> periodicFiles = getAllFilesOfFolder(bnBaseFolderPath);
                         periodicFiles.stream().filter(pf -> pf.startsWith("BankNifty") && pf.contains("min"))
                                 .forEach(pf -> {

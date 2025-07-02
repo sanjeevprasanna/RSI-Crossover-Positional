@@ -361,18 +361,25 @@ public class State {
         this.pivotsInitialized = true;
     }
 
-    public float nearestAbove(float px) {
+    public float nearestAbove(float entryPrice, int N, float high10) {
         if (!pivotsInitialized) throw new IllegalStateException("Pivots not initialized");
-        if (px < r1) return r1;
-        if (px < r2) return r2;
-        return Float.POSITIVE_INFINITY;
+
+        if (entryPrice < r1) return r1;
+        if (entryPrice < r2) return r2;
+
+        if (high10 > entryPrice) return high10;
+        return entryPrice + 0.01f;
     }
 
-    public float nearestBelow(float px) {
+    public float nearestBelow(float entryPrice, int N, float low10 ) {
         if (!pivotsInitialized) throw new IllegalStateException("Pivots not initialized");
-        if (px > s1) return s1;
-        if (px > s2) return s2;
-        return 0f;
+
+        if (entryPrice > s1) return s1;
+        if (entryPrice > s2) return s2;
+
+        if (low10 < entryPrice) return low10;
+
+        return entryPrice - 0.01f;
     }
 
     /*public void loadAdxIndicator(List<Object> adxInputs){

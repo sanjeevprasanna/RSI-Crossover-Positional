@@ -309,4 +309,10 @@ public class TradeEntity {
         updateOverAll();
         tradeSquared = true;
     }
+
+    public void exit(String reason, String reasonInfo) {
+        if (!this.tradeSquared) {
+            this.exitTrade(reason, reasonInfo);
+        }
+    }
 }
