@@ -8,7 +8,7 @@ A Java-8, Maven-built framework that back-tests a **RSI–EMA crossover strategy
 | **Markets** | Bank Nifty (minute & day), stocks & options – easily extendable |
 | **Trade Types** | Long / Short positional, overlap control, forced Thursday exit |
 | **Indicators** | 20-EMA, RSI-14, classic floor pivots (PP / R1 R2 / S1 S2) |
-| **Strategy Logic** |<br>• *Entry* – `RSI > 60 && Close > EMA && High > PDH` (long)  <br>• *Entry* – `RSI < 40 && Close < EMA && Low < PDL` (short)  <br>• *Targets* – nearest pivot resistance / support  <br>• *Stop-loss* – 10-candle swing high / low  |
+| **Strategy Logic** |<br>• *Entry* – `RSI > 60 && Close > EMA && High > PDH` (long)  <br>• *Entry* – `RSI < 40 && Close < EMA && Low < PDL` (short)  <br>• *Targets* – nearest pivot resistance  <br>• *Stop-loss* – nearest pivot support |
 | **Day-Exit Rules** | SL, target, retracement, inactivity & Thursday 15:15 |
 | **Reports** | `OrderInfo`, `DayWise`, `OverAllDetails` – all CSV |
 | **Config-Driven** | Change everything in `BaseStrategy.properties` |
