@@ -352,16 +352,16 @@ public class State {
             return  rsiIndicatorMap.get(rsiPeriod).getValue(parser).doubleValue();
     }
 
-    public void computePivots(float hi, float lo, float cls) {
-        this.pp = (hi + lo + cls) / 3f;
-        this.r1 = 2 * pp - lo;
-        this.s1 = 2 * pp - hi;
-        this.r2 = pp + (hi - lo);
-        this.s2 = pp - (hi - lo);
+ public void computePivots(float high, float low, float close) {
+        this.pp = (high + low + close) / 3f;
+        this.r1 = 2 * pp - low;
+        this.s1 = 2 * pp - high;
+        this.r2 = pp + (high - low);
+        this.s2 = pp - (high - low);
         this.pivotsInitialized = true;
     }
 
-    public float nearestAbove(float entryPrice, int N, float high10) {
+    public float nearestAbove(float entryPrice, float high10) {
         if (!pivotsInitialized) throw new IllegalStateException("Pivots not initialized");
 
         if (entryPrice < r1) return r1;
@@ -371,7 +371,7 @@ public class State {
         return entryPrice + 0.01f;
     }
 
-    public float nearestBelow(float entryPrice, int N, float low10 ) {
+    public float nearestBelow(float entryPrice, float low10 ) {
         if (!pivotsInitialized) throw new IllegalStateException("Pivots not initialized");
 
         if (entryPrice > s1) return s1;

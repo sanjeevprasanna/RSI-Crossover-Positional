@@ -30,10 +30,10 @@ public class StrategyImpl {
     private final Map<String, Double> dayAtrMap, dayAtrMapPercentage;
     private int parserAtLastTrade;
     private String lastAtrCheckeAtDate = "";
-    private int chk = 0;
+    //private int chk = 0;
     // Pivot tracking fields
     private String prevDate = null;
-    private List<Ohlc> prevDayBars = new ArrayList<>();
+    //private List<Ohlc> prevDayBars = new ArrayList<>();
 
    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm");
     private static final DateTimeFormatter INPUT_DATE_FMT = DateTimeFormatter.ofPattern("dd-MM-yy HH:mm");
@@ -66,7 +66,10 @@ public class StrategyImpl {
         String currDate = indexState.ohlc.date;
 
         // PIVOT LOGIC
-        if (prevDate != null && !prevDate.equals(currDate)) {
+
+
+        //prevDayBars- holds Entire days minute ohlc
+        /*if (prevDate != null && !prevDate.equals(currDate)) {
             if (!prevDayBars.isEmpty()) {
                 float hi = Float.NEGATIVE_INFINITY, lo = Float.POSITIVE_INFINITY, cls = 0;
                 for (Ohlc bar : prevDayBars) {
@@ -82,7 +85,21 @@ public class StrategyImpl {
             prevDayBars.clear();
         }
         prevDate = currDate;
-        prevDayBars.add(new Ohlc(indexState.ohlc));
+        prevDayBars.add(new Ohlc(indexState.ohlc));*/
+
+        if (prevDate != null && !prevDate.equals(currDate)) {
+            float high = indexState.ohlc.prevDayHigh;
+            float low = indexState.ohlc.prevDayLow;
+            float close = indexState.ohlc.lastDayClose;
+            indexState.computePivots(high, low, close);
+            indexState.pivotsInitialized = true;
+
+        }
+        /*System.out.println("DEBUG: Pivots for " + currDate + " | prevDayHigh=" + indexState.ohlc.prevDayHigh
+                + " prevDayLow=" + indexState.ohlc.prevDayLow
+                + " lastDayClose=" + indexState.ohlc.lastDayClose);
+        */
+        prevDate = currDate;
 
         if ((mins >= kv.startTime || candlePeriodBelongsToDay)
                 && !lastAtrCheckeAtDate.equals(indexState.ohlc.date)) {
@@ -136,7 +153,6 @@ public class StrategyImpl {
             //System.out.println("chkr"+" " +o.getBeginTime()+" "+o.getEndTime()+" ");
         }
 
-
         //String inputDateTime = indexState.ohlc.date + " " + indexState.ohlc.time;
         //String formattedDateTime;
         //LocalDateTime ldt = LocalDateTime.parse(inputDateTime, INPUT_DATE_FMT);
@@ -145,25 +161,37 @@ public class StrategyImpl {
 
         // ENTRY: LONG
         if (kv.usePivots) {
-            if (rsiVal > 60 && bar.close > emaVal && bar.high > high10 && kv.tradeType.equals("l")) {
+            if (bar.high>bar.prevDayHigh && rsiVal > kv.rsiLong && bar.close > emaVal  && kv.tradeType.equals("l")) {
                 TradeEntity trade = new TradeEntity(tradeId, 0, 0, kv, (IndexState) indexState, indexStateMap);
                 trade.entryEma = emaVal;
                 trade.entryRsi = rsiVal;
                 trade.entryPivot = (indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN);
-                trade.setStopLoss(low10);
-                trade.setTarget(indexState.nearestAbove(bar.close, 10, high10));
+                trade.pdh= bar.prevDayHigh;
+                trade.cdh=bar.high;
+                trade.hhv=high10;
+                trade.pdl= bar.prevDayLow;
+                trade.cdl=bar.low;
+                trade.llv=low10;
+                trade.setStopLoss(indexState.nearestBelow(bar.close,low10));//support-SL
+                trade.setTarget(indexState.nearestAbove(bar.close, high10));//resistance-TP
                 tradeEntities.add(trade);
                 tradeId++;
                 parserAtLastTrade = indexState.parser;
             }
             // ENTRY: SHORT
-            if (rsiVal < 40 && bar.close < emaVal && bar.low < low10 && kv.tradeType.equals("s")) {
+            if ( bar.low<bar.prevDayLow && rsiVal < kv.rsiShort && bar.close < emaVal &&  kv.tradeType.equals("s")) {
                 TradeEntity trade = new TradeEntity(tradeId, 0, 0, kv, (IndexState) indexState, indexStateMap);
                 trade.entryEma = emaVal;
                 trade.entryRsi = rsiVal;
                 trade.entryPivot = (indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN);
-                trade.setStopLoss(high10);
-                trade.setTarget(indexState.nearestBelow(bar.close, 10,low10));
+                trade.pdh= bar.prevDayHigh;
+                trade.cdh=bar.high;
+                trade.hhv=high10;
+                trade.pdl= bar.prevDayLow;
+                trade.cdl=bar.low;
+                trade.llv=low10;
+                trade.setStopLoss(indexState.nearestAbove(bar.close, high10));
+                trade.setTarget(indexState.nearestBelow(bar.close,low10));
                 tradeEntities.add(trade);
                 tradeId++;
                 parserAtLastTrade = indexState.parser;

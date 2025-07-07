@@ -104,9 +104,9 @@ public class TradeMetric {
                PrintWriters.orderInfoPrintWriter.write(
                         kv.sno + "," + option + "," + exitOhlc.date + "," + id + "," + holdingPeriodInDay + "," +
                                 lOrS + ",Entry," + entryOhlc.date + "," + entryOhlc.time + "," + entryOhlc.close + "," +
-                                entryEma + "," + entryRsi + "," + entryPivot + "," +
+                                entryEma+"("+kv.emaPeriod+")" + "," + entryRsi +"("+kv.rsiLong+"-"+kv.rsiShort+")" + "," + entryPivot + "," +
                                 "Exit," + exitOhlc.date + "," + exitOhlc.time + "," + exitOhlc.close + "," +
-                                exitEma + "," + exitRsi + "," + exitPivot + "," +
+                                exitEma+"("+kv.emaPeriod+")" + "," + exitRsi+"("+kv.rsiLong+"-"+kv.rsiShort+")" + "," + exitPivot + "," +
                                 reason + "," + reasonInfo + "," + profit.profit + "," + profitPercent + "," + tradeMaxProfit + "," +
                                 profitWithCost + "," + afterHpCostProfitPercentCost + "," +
                                 printAttribs + "," + indexClose  + "," + this.holdingPeriodCost + "\n"
@@ -114,7 +114,80 @@ public class TradeMetric {
         PrintWriters.orderInfoPrintWriter.flush();
         }
         }
+    public void calculateOverAllMetricsAndPrint(
+            float profitPercent,
+            float profitWithCost,
+            float profitPercentWithCost,
+            String reason,
+            String reasonInfo,
+            int id,
+            int holdingPeriod,
+            KeyValues kv,
+            Ohlc exitOhlc,
+            float indexClose,
+            String option,
+            PrintAttribs printAttribs,
+            float tradeMaxProfit,
+            double entryEma,
+            double entryRsi,
+            double entryPivot,
+            float pdh,
+            float cdh,
+            double hhv,
+            float pdl,
+            float cdl,
+            double llv,
+            double exitEma,
+            double exitRsi,
+            double exitPivot
+    ){
+        this.exitOhlc = exitOhlc;
+        if(lOrS =='l') this.profit.add(exitOhlc.close - entryOhlc.close);
+        else this.profit.add(entryOhlc.close - exitOhlc.close);
 
+//        changes for hp related -------
+        String entryDate=entryOhlc.dnt;
+        String exitDate=exitOhlc.dnt;
+        double holdingPeriodInMinutes=getMinutesDifference(entryDate,exitDate);
+        float holdingPeriodInDay=(float) holdingPeriodInMinutes/24/60;
+
+
+        this.totalHoldingPeriod+= holdingPeriodInDay;
+        holdingPeriodCost=getHoldingPeriodCost(holdingPeriodInMinutes, kv.hpCostPercent);
+        this.totalHoldingPeriodCost+= holdingPeriodCost;
+
+        float afterHpCostProfitPercentCost= (float) (profitPercentWithCost-holdingPeriodCost);
+
+        this.profitPercent.add(profitPercent);
+        this.profitWithCost.add(profitWithCost);
+        this.profitPercentWithCost.add(afterHpCostProfitPercentCost);
+
+
+
+        totalTrades = 1;
+
+        if(isPrinting){
+            /*orderInfo.write(kv.sno + "," + option + "," + exitOhlc.date + "," + id + "," + holdingPeriodInDay + "," +
+                    lOrS + ",Entry," + entryOhlc.date + "," + entryOhlc.time + "," +
+                    entryOhlc.close+",Exit," + exitOhlc.date + "," + exitOhlc.time + "," + exitOhlc.close + "," + reason + "," +
+                    reasonInfo + "," + profit.profit + "," + profitPercent +"," + tradeMaxProfit + "," +
+                    profitWithCost + "," + afterHpCostProfitPercentCost + "," +
+                    printAttribs + "," + indexClose  + "," + this.holdingPeriodCost + "\n");
+*/
+            PrintWriters.orderInfoPrintWriter.write(
+                    kv.sno + "," + option + "," + exitOhlc.date + "," + id + "," + holdingPeriodInDay + "," +
+                            lOrS + ",Entry," + entryOhlc.date + "," + entryOhlc.time + "," + entryOhlc.close + "," +
+                            entryEma+"("+kv.emaPeriod+")" + "," + entryRsi +"("+kv.rsiLong+"-"+kv.rsiShort+")" + "," + entryPivot + ","
+                            +pdh+","+cdh+"," + hhv + ","+pdl+","+cdl +","+ llv + "," +
+                            "Exit," + exitOhlc.date + "," + exitOhlc.time + "," + exitOhlc.close + "," +
+                            exitEma+"("+kv.emaPeriod+")" + "," + exitRsi+"("+kv.rsiLong+"-"+kv.rsiShort+")" + "," + exitPivot + "," +
+                            reason + "," + reasonInfo + "," + profit.profit + "," + profitPercent + "," + tradeMaxProfit + "," +
+                            profitWithCost + "," + afterHpCostProfitPercentCost + "," +
+                            printAttribs + "," + indexClose  + "," + this.holdingPeriodCost + "\n"
+            );
+            PrintWriters.orderInfoPrintWriter.flush();
+        }
+    }
     public double getHoldingPeriodCost(double mins,double hpCostPercent){
         return  (mins/24/60)*hpCostPercent;
 

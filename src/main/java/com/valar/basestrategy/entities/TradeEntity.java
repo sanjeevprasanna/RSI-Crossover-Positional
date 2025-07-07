@@ -36,7 +36,8 @@ public class TradeEntity {
     //for tracking ema,rsi,pivot in orderinfo
     public double entryEma, entryRsi, entryPivot;
     public double exitEma, exitRsi, exitPivot;
-
+    public double hhv, llv;
+    public float pdh,pdl,cdh,cdl;
     public List<TradeAttrib> tradeAttribs = new ArrayList<>(2);
 
     private ProfitMetric profit = new ProfitMetric(),
@@ -301,6 +302,12 @@ public class TradeEntity {
                     entryEma,
                     entryRsi,
                     entryPivot,
+                    pdh,
+                    cdh,
+                    hhv,
+                    pdl,
+                    cdl,
+                    llv,
                     exitEma,
                     exitRsi,
                     exitPivot

@@ -9,7 +9,7 @@ public class Ohlc {
     public String lastLn = "", ln = "", dnt, date, lastDayDate, time;
     public int hr, min;
     public int mins;
-    public float open, high, low, close, lastDayClose, lastMinClose, volume;
+    public float open, high, low, close, lastDayClose, lastMinClose, volume,currentDayHigh=-Float.MAX_VALUE,currentDayLow=Float.MAX_VALUE,prevDayHigh=-Float.MAX_VALUE,prevDayLow=Float.MAX_VALUE;
     public int volumePeriod;
     public List<Float> volumes = new ArrayList<>();
 
@@ -58,8 +58,26 @@ public class Ohlc {
         lastMinClose = close;
         close = Float.parseFloat(splits[4]);
 
-        if ("15:30".equals(time) && close != 0) {
-            lastDayClose = Float.parseFloat(splits[4]);
+        currentDayHigh = Math.max(currentDayHigh, high);
+        currentDayLow  = Math.min(currentDayLow , low);
+
+        if ("09:15".equals(time)) {
+            if (prevDayHigh == -Float.MAX_VALUE && prevDayLow == Float.MAX_VALUE && lastDayClose==0.0f) {
+                prevDayHigh = high;
+                prevDayLow = low;
+                lastDayClose=close;
+            } else {
+                prevDayHigh = currentDayHigh;
+                prevDayLow = currentDayLow;
+                lastDayClose=close;
+            }
+            currentDayHigh = high;
+            currentDayLow = low;
+
+        }
+
+       if ("15:30".equals(time) && close != 0) {
+            //lastDayClose = Float.parseFloat(splits[4]);
             lastDayDate = date;
         }
 

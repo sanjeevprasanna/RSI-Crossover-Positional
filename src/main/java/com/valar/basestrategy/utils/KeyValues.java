@@ -21,7 +21,7 @@ public class KeyValues {
     public final int emaPeriod;
     public  final int rsiPeriod;
     public final boolean usePivots ;
-
+    public final int rsiLong,rsiShort;
     public KeyValues(String ln) {
         this.ln = ln;
         String[] splits = ln.split(",");
@@ -40,6 +40,8 @@ public class KeyValues {
         usePivots = Boolean.parseBoolean(splits[iter++]);
         maxOverlap = Integer.parseInt(splits[iter++]);
         tradeGap = Integer.parseInt(splits[iter++]);
+        rsiLong = Integer.parseInt(splits[iter++]);
+        rsiShort = Integer.parseInt(splits[iter++]);
     }
 
     public static List<String> getTimeFrames(int timeFrame) {
