@@ -40,6 +40,20 @@ public class TradeEntity {
     public float pdh,pdl,cdh,cdl;
     public List<TradeAttrib> tradeAttribs = new ArrayList<>(2);
 
+    public void setTrade(double entryEma, double entryRsi, double entryPivot,float pdh,float pdl,float cdh,float cdl,double hhv,double llv) {
+        this.entryEma=entryEma;
+        this.entryRsi=entryRsi;
+        this.entryPivot=entryPivot;
+        this.pdh=pdh;
+        this.pdl=pdl;
+        this.cdh=cdh;
+        this.cdl=cdl;
+        this.hhv=hhv;
+        this.llv=llv;
+    }
+
+
+
     private ProfitMetric profit = new ProfitMetric(),
             profitPercent = new ProfitMetric(),
             profitPercentBN = new ProfitMetric(),
@@ -103,7 +117,6 @@ public class TradeEntity {
         canEnter = true;
         return this;
     }
-
     public void setStopLoss(double stopLoss) { this.stopLoss = stopLoss; }
     public void setTarget(double target) { this.target = target; }
 

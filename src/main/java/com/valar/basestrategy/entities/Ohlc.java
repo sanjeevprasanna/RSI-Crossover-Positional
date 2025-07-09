@@ -58,26 +58,20 @@ public class Ohlc {
         lastMinClose = close;
         close = Float.parseFloat(splits[4]);
 
-        currentDayHigh = Math.max(currentDayHigh, high);
-        currentDayLow  = Math.min(currentDayLow , low);
+
 
         if ("09:15".equals(time)) {
-            if (prevDayHigh == -Float.MAX_VALUE && prevDayLow == Float.MAX_VALUE && lastDayClose==0.0f) {
-                prevDayHigh = high;
-                prevDayLow = low;
-                lastDayClose=close;
-            } else {
-                prevDayHigh = currentDayHigh;
-                prevDayLow = currentDayLow;
-                lastDayClose=close;
-            }
+            prevDayHigh = currentDayHigh;
+            prevDayLow = currentDayLow;
             currentDayHigh = high;
             currentDayLow = low;
-
+        }else{
+            currentDayHigh = Math.max(currentDayHigh, high);
+            currentDayLow  = Math.min(currentDayLow , low);
         }
 
-       if ("15:30".equals(time) && close != 0) {
-            //lastDayClose = Float.parseFloat(splits[4]);
+       if ("15:29".equals(time) && close != 0) {
+            lastDayClose = Float.parseFloat(splits[4]);
             lastDayDate = date;
         }
 

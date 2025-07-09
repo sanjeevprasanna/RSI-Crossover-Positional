@@ -17,7 +17,7 @@ public class PrintWriters {
         orderInfoPrintWriter = new PrintWriter("./Outputs/OrderInfo[overAll].csv");
         orderInfoPrintWriter.write(
                 "S.no,Symbol,Date,ID,Holding Period,TradeType,Event,EntryDate,EntryTime,EntryClose," +
-                        "EntryEMA,EntryRSI,EntryPivot,PDH,CDH,HHV,PDL,PCL,LLV," + // New Columns
+                        "EntryEMA,EntryRSI,EntryPivot,PDH,CDH,HHV,PDL,CDL,LLV," + // New Columns
                         "Event,ExitDate,ExitTime,ExitClose," +
                         "ExitEMA,ExitRSI,ExitPivot," + // New Columns
                         "Reason,ReasonInfo,Profit,Profit%,tradeMaxProfit,ProfitWith(Cost),Profit%With(Cost)," +

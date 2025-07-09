@@ -163,15 +163,7 @@ public class StrategyImpl {
         if (kv.usePivots) {
             if (bar.high>bar.prevDayHigh && rsiVal > kv.rsiLong && bar.close > emaVal  && kv.tradeType.equals("l")) {
                 TradeEntity trade = new TradeEntity(tradeId, 0, 0, kv, (IndexState) indexState, indexStateMap);
-                trade.entryEma = emaVal;
-                trade.entryRsi = rsiVal;
-                trade.entryPivot = (indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN);
-                trade.pdh= bar.prevDayHigh;
-                trade.cdh=bar.high;
-                trade.hhv=high10;
-                trade.pdl= bar.prevDayLow;
-                trade.cdl=bar.low;
-                trade.llv=low10;
+                trade.setTrade(emaVal,rsiVal,(indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN), bar.prevDayHigh,bar.prevDayLow, bar.high,bar.low,high10,low10);
                 trade.setStopLoss(indexState.nearestBelow(bar.close,low10));//support-SL
                 trade.setTarget(indexState.nearestAbove(bar.close, high10));//resistance-TP
                 tradeEntities.add(trade);
@@ -181,15 +173,7 @@ public class StrategyImpl {
             // ENTRY: SHORT
             if ( bar.low<bar.prevDayLow && rsiVal < kv.rsiShort && bar.close < emaVal &&  kv.tradeType.equals("s")) {
                 TradeEntity trade = new TradeEntity(tradeId, 0, 0, kv, (IndexState) indexState, indexStateMap);
-                trade.entryEma = emaVal;
-                trade.entryRsi = rsiVal;
-                trade.entryPivot = (indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN);
-                trade.pdh= bar.prevDayHigh;
-                trade.cdh=bar.high;
-                trade.hhv=high10;
-                trade.pdl= bar.prevDayLow;
-                trade.cdl=bar.low;
-                trade.llv=low10;
+                trade.setTrade(emaVal,rsiVal,(indexState.pivotsInitialized ? ((float) indexState.pp) : Float.NaN), bar.prevDayHigh,bar.prevDayLow, bar.high,bar.low,high10,low10);
                 trade.setStopLoss(indexState.nearestAbove(bar.close, high10));
                 trade.setTarget(indexState.nearestBelow(bar.close,low10));
                 tradeEntities.add(trade);
